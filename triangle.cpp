@@ -7,20 +7,26 @@
 using namespace std;
 
 GLuint program;
-GLuint attributeCoord2d;
-GLuint vboTriangle;
+GLuint vboTriangle, vboTriangleColors;
+GLint attributeCoord2d, attributeVColor;
 
 bool initResources() {
+  GLfloat triangleColors[] = {
+    1.0, 0.0, 1.0,
+    0.0, 0.0, 1.0,
+    1.0, 0.0, 0.0,
+  };
+
+  glGenBuffers(1, &vboTriangleColors);
+  glBindBuffer(GL_ARRAY_BUFFER, vboTriangleColors);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(triangleColors),
+    triangleColors, GL_STATIC_DRAW);
+
   GLfloat triangleVertices[] = {
     0.0,  3,
     -3, -3,
     3, -3,
-	};
-
-  glGenBuffers(1, &vboTriangle);
-  glBindBuffer(GL_ARRAY_BUFFER, vboTriangle);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(triangleVertices),
-    triangleVertices, GL_STATIC_DRAW);
+  };
 
   GLint linkOk = GL_FALSE;
 
@@ -50,6 +56,19 @@ bool initResources() {
     return false;
   }
 
+  glGenBuffers(1, &vboTriangle);
+  glBindBuffer(GL_ARRAY_BUFFER, vboTriangle);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(triangleVertices),
+    triangleVertices, GL_STATIC_DRAW);
+
+  const char* attributeColorName = "v_color";
+  attributeVColor = glGetAttribLocation(program, attributeColorName);
+
+  if (attributeVColor == -1) {
+    cerr << "Could not bind attribute " << attributeColorName << endl;
+    return false;
+  }
+
   return true;
 }
 
@@ -73,8 +92,20 @@ void render(SDL_Window* window) {
     0,
     0);
 
+  glEnableVertexAttribArray(vboTriangleColors);
+  glBindBuffer(GL_ARRAY_BUFFER, attributeVColor);
+
+  glVertexAttribPointer(
+    attributeVColor,
+    3,
+    GL_FLOAT,
+    GL_FALSE,
+    0,
+    0);
+
   glDrawArrays(GL_TRIANGLES, 0, 3);
   glDisableVertexAttribArray(attributeCoord2d);
+  glDisableVertexAttribArray(attributeVColor);
   SDL_GL_SwapWindow(window);
 }
 
