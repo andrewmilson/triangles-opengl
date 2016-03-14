@@ -6,27 +6,26 @@
 
 using namespace std;
 
+typedef struct {
+  GLfloat coord2d[2];
+  GLfloat v_color[3];
+} Attributes;
+
+Attributes triangleAttributes[] = {
+  {{0.0,  0.8}, {1.0, 1.0, 0.0}},
+  {{-0.8, -0.8}, {0.0, 0.0, 1.0}},
+  {{0.8, -0.8}, {1.0, 0.0, 0.0}},
+};
+
 GLuint program;
 GLuint vboTriangle, vboTriangleColors;
 GLint attributeCoord2d, attributeVColor;
 
 bool initResources() {
-  GLfloat triangleColors[] = {
-    1.0, 0.0, 1.0,
-    0.0, 0.0, 1.0,
-    1.0, 0.0, 0.0,
-  };
-
-  glGenBuffers(1, &vboTriangleColors);
-  glBindBuffer(GL_ARRAY_BUFFER, vboTriangleColors);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(triangleColors),
-    triangleColors, GL_STATIC_DRAW);
-
-  GLfloat triangleVertices[] = {
-    0.0,  3,
-    -3, -3,
-    3, -3,
-  };
+  glGenBuffers(1, &vboTriangle);
+  glBindBuffer(GL_ARRAY_BUFFER, vboTriangle);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(triangleAttributes),
+    triangleAttributes, GL_STATIC_DRAW);
 
   GLint linkOk = GL_FALSE;
 
@@ -48,18 +47,13 @@ bool initResources() {
     return false;
   }
 
-  const char* attributeName = "coord2d";
-  attributeCoord2d = glGetAttribLocation(program, attributeName);
+  const char* attributeCoordName = "coord2d";
+  attributeCoord2d = glGetAttribLocation(program, attributeCoordName);
 
   if (attributeCoord2d == -1) {
-    cerr << "Could not bind attribute " << attributeName << endl;
+    cerr << "Could not bind attribute " << attributeCoordName << endl;
     return false;
   }
-
-  glGenBuffers(1, &vboTriangle);
-  glBindBuffer(GL_ARRAY_BUFFER, vboTriangle);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(triangleVertices),
-    triangleVertices, GL_STATIC_DRAW);
 
   const char* attributeColorName = "v_color";
   attributeVColor = glGetAttribLocation(program, attributeColorName);
@@ -83,25 +77,23 @@ void render(SDL_Window* window) {
 
   glBindBuffer(GL_ARRAY_BUFFER, vboTriangle);
   glEnableVertexAttribArray(attributeCoord2d);
+  glEnableVertexAttribArray(attributeVColor);
 
   glVertexAttribPointer(
     attributeCoord2d,
     2,
     GL_FLOAT,
     GL_FALSE,
-    0,
+    sizeof(Attributes),
     0);
-
-  glEnableVertexAttribArray(vboTriangleColors);
-  glBindBuffer(GL_ARRAY_BUFFER, attributeVColor);
 
   glVertexAttribPointer(
     attributeVColor,
     3,
     GL_FLOAT,
     GL_FALSE,
-    0,
-    0);
+    sizeof(Attributes),
+    (GLvoid*) offsetof(Attributes, v_color));
 
   glDrawArrays(GL_TRIANGLES, 0, 3);
   glDisableVertexAttribArray(attributeCoord2d);
