@@ -68,16 +68,26 @@ GLuint createShader(const char* filename, GLenum type) {
 
   GLuint res = glCreateShader(type);
 
+  // GLSL version
+	const char* version;
+	int profile;
+
+  SDL_GL_GetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, &profile);
+	if (profile == SDL_GL_CONTEXT_PROFILE_ES) {
+		version = "#version 100\n";
+	} else {
+		version = "#version 120\n";
+  }
+
+  const GLchar* precision = readFile("glsl/precision.glsl");
+
   const GLchar* sources[] = {
-#ifdef GL_ES_VERSION_2_0
-    "#version 100\n",
-#else
-    "#version 120\n",
-#endif
+    version,
+    precision,
     source
   };
 
-  glShaderSource(res, 2, sources, NULL);
+  glShaderSource(res, 3, sources, NULL);
   free((void*) source);
 
   glCompileShader(res);
